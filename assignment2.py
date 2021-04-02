@@ -7,7 +7,6 @@ Created on Mon Mar 29 14:59:07 2021
 
 # Import Module
 import os
-import string
 import math
   
 # Folder Paths
@@ -21,12 +20,14 @@ stopWordsFileName = "stopWords.txt"
 numSpamFiles = 0
 numHamFiles = 0
 
+# an object containing a word and ints to track how many times word appears in spam and ham files
 class VocabWord:
     def __init__(self, word, spam, ham):
         self.word = word.casefold()
         self.spam = spam
         self.ham = ham
         
+    # compares this VocabWord to a string
     def compareToString(self, stg):
         if(self.word == stg.casefold()):
             return 0
@@ -34,36 +35,27 @@ class VocabWord:
             return 1
         else:
             return -1
+    # end compareToString()
 # end VocabWord
         
-
+# instantiates a VocabWord as either spam or ham, depending on the value of isSpam. Returns VocabWord
 def createNewWord(word, isSpam):
     if isSpam:
         newWord = VocabWord(word, 1, 0)
     else:
         newWord = VocabWord(word, 0, 1)
     return newWord
-#end createNewWorld()
-            
+#end createNewWorld()            
 
-def printVocabList(vList):
-    os.chdir(basePath)
-    outFile = open('output.txt', 'w')
-    for i in vList:
-        #print(i.word + ": Spam = " + str(i.spam) + "; Ham = " + str(i.ham))
-        print(i.word + ": Spam = " + str(i.spam) + "; Ham = " + str(i.ham), file = outFile)
-    outFile.close()
-# end printVocabList()
-
-
+# preforms binary search of vocabList, returning the index of word, or index where word should go if not in list
 def binarySearch(vList, word, start, end):
     if start == end:
         return start
             
     length = end - start
     middle = start + (int)(length / 2)
-    #print("middle = " + str(middle) + ", len = " + str(len(vList)))
     compare = vList[middle].compareToString(word)
+    
     if compare == 0:
         return middle
     elif compare < 0:
@@ -72,20 +64,24 @@ def binarySearch(vList, word, start, end):
         return binarySearch(vList, word, start, middle)
 #end binarySearch()
     
-
+# uses binarySearch to find word in vocabList. If word exists adds 1 to either spam or ham. If word doesn't exist,
+# inserts word at index. Returns updated vocabList
 def insertVocab(vList, word, isSpam):
+    # if empty list
     if not vList:
         vList.append(createNewWord(word, isSpam))
         return vList
         
+    # get index
     index = binarySearch(vList, word, 0, len(vList) - 1)
     
     compare = vList[index].compareToString(word)
-    if compare == 0:
+    if compare == 0: # if word is already in vList
         if isSpam:
             vList[index].spam += 1
         else:
             vList[index].ham += 1
+    # if word not in list, determine which side of index it belongs on to maintain sorted order
     elif compare > 0:
         vList.insert(index, createNewWord(word, isSpam))
     elif compare < 0:
@@ -97,7 +93,9 @@ def insertVocab(vList, word, isSpam):
     return vList
 # end insertVocab()
 
-
+# reads all files in path, inserting each word to vocabList, either as a new word, or incrementing existing words.
+# stopList contains a list of words to be excluded from the vocabList
+# Returns vocabList
 def populateVocabList(vList, path, isSpam, stopList):
     global numSpamFiles
     global numHamFiles
@@ -109,6 +107,7 @@ def populateVocabList(vList, path, isSpam, stopList):
         # Check whether file is in text format or not
         if file.endswith(".txt"):
             file_path = f"{path}\{file}"
+            # Count total number of files, for use when classifying spam
             if isSpam:
                 numSpamFiles += 1
             else:
@@ -116,7 +115,6 @@ def populateVocabList(vList, path, isSpam, stopList):
             
             # read from file
             with open(file_path, encoding='utf8', errors='ignore') as f:
-                #print(f)
                 for line in f:
                     for word in line.split():
                         if word not in stopList:
@@ -125,31 +123,31 @@ def populateVocabList(vList, path, isSpam, stopList):
     return vList
 # end populateVocabList()
 
+# takes in a single text file and classifies it as either spam or not spam based on the values in vocabList
+# Returns true if determined as spam, false if determined not spam
 def classifySpam(vList, file, totalWordsHam, totalWordsSpam):
     pSpam = 0
     pHam = 0
     for line in file:
         for word in line.split():    
+            # find word in vocabList
             index = binarySearch(vList, word, 0, len(vList) - 1)
+            # if word is in vocabList
             if vList[index].compareToString(word) == 0:
-                #print(word)
-                #print("spam = " + str(vList[index].spam) + "; pSpam = " + str(vList[index].spam / totalWordsSpam))
-                #print("ham = " + str(vList[index].ham) + "; pHam = " + str(vList[index].ham / totalWordsHam))
                 pSpam += math.log2((vList[index].spam + 1) / (totalWordsSpam + len(vList) - 1))
                 pHam += math.log2((vList[index].ham + 1) / (totalWordsHam + len(vList) - 1))
     
+    # Naive Bayes Algorithm
     pSpam += math.log2(numSpamFiles / (numSpamFiles + numHamFiles))
     pHam += math.log2(numHamFiles / (numSpamFiles + numHamFiles))
-    #print("pSpam = " + str(pSpam))
-    #print("pHam = " + str(pHam))
     if pSpam > pHam:
-        #print("This is spam")
         return True
     else:
-        #print("100% certifies ham")
         return False
 # end classify Spam()
 
+# reads all files in path, then uses classifySpam to determine if each file is spam or not spam
+# returns the accuracy of classifySpam results as a float value
 def testDataSet(vList, path, isSpam, totalWordsHam, totalWordsSpam):
     totalFiles = 0
     correctTests = 0
@@ -163,9 +161,10 @@ def testDataSet(vList, path, isSpam, totalWordsHam, totalWordsSpam):
             file_path = f"{path}\{file}"
             # read from file
             with open(file_path, encoding='utf8', errors='ignore') as f:
-                #print(f)
+                # classifySpam
                 spamTest = classifySpam(vList, f, totalWordsHam, totalWordsSpam)
                 totalFiles += 1
+                # if classifySpam was correct
                 if spamTest == isSpam:
                     correctTests += 1
             f.close()
@@ -176,7 +175,7 @@ def testDataSet(vList, path, isSpam, totalWordsHam, totalWordsSpam):
     return correctTests / totalFiles
 # end testDataSet()
                             
-
+# reads file from path, creating a list from the words contained within. Returns the list of words
 def populateStopWords(stopList, path, fileName):
     # Change the directory
     os.chdir(path)
@@ -196,13 +195,13 @@ def populateStopWords(stopList, path, fileName):
 vocabList = []
 stopList = []
 
+# PART ONE - NOT USING STOP WORDS
 print("Reading training data")
+# in this section, stopList is empty, so no words are excluded from vocabList
 # train spam
 vocabList = populateVocabList(vocabList, trainSpamPath, True, stopList)
 # train ham
 vocabList = populateVocabList(vocabList, trainHamPath, False, stopList)
-#printVocabList(vocabList)
-print("Done")
 
 print("Testing learned data")
 # count spam and ham words
@@ -218,11 +217,10 @@ testDataSet(vocabList, testSpamPath, True, totalWordsHam, totalWordsSpam)
 # test ham
 print("Ham test")
 testDataSet(vocabList, testHamPath, False, totalWordsHam, totalWordsSpam)
-print("Done")
-
-
-# without stop words
 print("\n")
+
+
+# PART TWO - USING STOP WORDS
 # get stop words
 print("Reading stop words file")
 stopList = populateStopWords(stopList, basePath, stopWordsFileName)
@@ -233,8 +231,6 @@ print("Reading training data")
 vocabList = populateVocabList(vocabList, trainSpamPath, True, stopList)
 # train ham
 vocabList = populateVocabList(vocabList, trainHamPath, False, stopList)
-#printVocabList(vocabList)
-print("Done")
 
 print("Testing learned data")
 # count spam and ham words
