@@ -1,0 +1,13 @@
+Execution:
+- To execute the program, the "test" and "train" files will need to be in the same directory as the python file.
+- The text file "stopWords.txt" must also be in the directory as the python file.
+- Finally, line 13 of the python file contains a variable named "basePath". Set this variable
+to the path of the directory the python program is running from.
+
+Report:
+The results of this test were that before removing the stop words, spam emails were classified with 90.8 %
+accuracy, while ham emails were classified with 96.3 % accuracy, for a total of 93.5 % accuracy between the two.
+After removing stop words, spam emails were classified with 88.5 % accuracy, while ham emails were classified
+with 96.6 % accuracy, for a total of 92.5 % accuracy. 
+Removing stop words resulted in a decrease in accuracy for classifying spam emails, but a slight increase in accuracy
+classifying ham emails. The overall accuracy was reduced.

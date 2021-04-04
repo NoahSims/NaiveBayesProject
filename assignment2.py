@@ -11,10 +11,10 @@ import math
   
 # Folder Paths
 basePath = "C:/Users/Noah Sims/.spyder-py3/NaiveBayesProject/"
-trainSpamPath = basePath + "assignment3_train/train/spam/"
-trainHamPath = basePath + "assignment3_train/train/ham/"
-testSpamPath = basePath + "assignment3_test/test/spam/"
-testHamPath = basePath + "assignment3_test/test/ham/"
+trainSpamPath = basePath + "train/spam/"
+trainHamPath = basePath + "train/ham/"
+testSpamPath = basePath + "test/spam/"
+testHamPath = basePath + "test/ham/"
 stopWordsFileName = "stopWords.txt"
 
 numSpamFiles = 0
@@ -213,10 +213,11 @@ for i in vocabList:
 
 # test spam
 print("Spam Test")
-testDataSet(vocabList, testSpamPath, True, totalWordsHam, totalWordsSpam)
+spamAccuracy = testDataSet(vocabList, testSpamPath, True, totalWordsHam, totalWordsSpam)
 # test ham
 print("Ham test")
-testDataSet(vocabList, testHamPath, False, totalWordsHam, totalWordsSpam)
+hamAccuracy = testDataSet(vocabList, testHamPath, False, totalWordsHam, totalWordsSpam)
+print("Total accuracy = " + str((spamAccuracy + hamAccuracy) / 2))
 print("\n")
 
 
@@ -242,8 +243,9 @@ for i in vocabList:
     
 # test spam
 print("Spam Test")
-testDataSet(vocabList, testSpamPath, True, totalWordsHam, totalWordsSpam)
+spamAccuracy = testDataSet(vocabList, testSpamPath, True, totalWordsHam, totalWordsSpam)
 # test ham
 print("Ham test")
-testDataSet(vocabList, testHamPath, False, totalWordsHam, totalWordsSpam)
+hamAccuracy = testDataSet(vocabList, testHamPath, False, totalWordsHam, totalWordsSpam)
+print("Total accuracy = " + str((spamAccuracy + hamAccuracy) / 2))
 print("Done")
